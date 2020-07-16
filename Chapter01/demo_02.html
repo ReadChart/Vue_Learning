@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo2</title>
+</head>
+<body>
+<div id="app">
+<!--    绑定boolean-->
+    <!--当boolean为true-->
+    <h1 v-if="boolean">The Value Is True</h1>
+    <!--其他-->
+    <h1 v-else>The Value Is False</h1>
+</div>
+
+<!--引入VueJS-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    let vm = new Vue({
+        el:"#app",
+        data:{
+            boolean: true
+        }
+    });
+</script>
+</body>
+</html>

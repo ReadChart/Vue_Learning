@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo4</title>
+</head>
+<body>
+<div id="app">
+    <!--使用v-on标签绑定事件-->
+    <button v-on:click="showText">
+        Click To Alert The Message
+    </button>
+</div>
+
+<!--引入VueJS-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    //创建对象
+    let vm = new Vue({
+        el:"#app",
+        data:{
+            message: "This is a text"
+        },
+        //定义方法：注意methods单复数
+        methods:{
+            //定义event事件
+            showText:function (event) {
+                //this指向本对象
+                alert(this.message);
+            }
+        }
+    });
+</script>
+</body>
+</html>

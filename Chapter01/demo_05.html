@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo4</title>
+</head>
+<body>
+<div id="app">
+<!--Text-->
+    Input Text Area:
+    <label>
+        <input type="text" v-model="InputText">
+    </label>
+    <!--展示内容-->
+    {{InputText}}
+    <br/>
+<!--Textarea-->
+    Input Textarea:
+    <label>
+        <textarea rows="3"  v-model="InputTextarea"></textarea>
+    </label>
+    <!--展示内容-->
+    {{InputTextarea}}
+    <br/>
+<!--Radio-->
+    Select Radio:
+    <input type="radio" name="gender" value="Male" v-model="gender">Male
+    <input type="radio" name="gender" value="Female" v-model="gender">Female
+    <br/>
+    <!--展示选项-->
+    You've Selected : {{gender}}
+    <br/>
+<!--Drop List-->
+    Select Drop List:
+    <label>
+        <select v-model="selected">
+            <!--此处绑定后，如果需要设置默认选项必须把value置空，并且设置disabled-->
+            <option disabled value="">Please Select</option>
+            <option>Option#1</option>
+            <option>Option#2</option>
+            <option>Option#3</option>
+            <option>Option#4</option>
+        </select>
+        <br/>
+        <!--展示选项-->
+        Your Selection is: {{selected}}
+    </label>
+</div>
+
+
+<!--引入VueJS-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    //创建对象
+    let vm = new Vue({
+        el: "#app",
+        data: {
+            InputText: 'Default Text',
+            InputTextarea: 'Default Textarea',
+            gender:'',
+            selected: ''
+        }
+    });
+</script>
+</body>
+</html>

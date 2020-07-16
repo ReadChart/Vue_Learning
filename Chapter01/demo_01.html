@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VueChapter1</title>
+</head>
+<body>
+<h1>Vue_Learning_Demo1</h1>
+<div id="app">
+    {{message}}
+</div>
+
+<!--导入Vue.js-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    let vm = new Vue({
+        //绑定元素app
+        el:"#app",
+        data:{
+            message:"Hello Vue Test"
+        }
+    })
+</script>
+</body>
+</html>

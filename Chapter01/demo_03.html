@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo3</title>
+</head>
+<body>
+<div id="app">
+    <!--遍历数组items中内容-->
+    <li v-for="item in items">
+        <!--指定内容message-->
+        {{item.message}}
+    </li>
+    <br/>
+    <li v-for="item in items">
+        <!--指定内容text-->
+        {{item.text}}
+    </li>
+</div>
+
+<!--引入VueJS-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    let vm = new Vue({
+        el:"#app",
+        data:{
+            items:[
+                //定义数组内容"{键:值}"对
+                {message: "message1"},
+                {text: "plainText1"},
+                {message: "message2"},
+                {text: "plainText2"}
+            ]
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 # Intellij Configuration File Begin
 /.idea/
 *.iml
+.gitignore
 # Intellij Configuration File End

@@ -1,0 +1,25 @@
+{
+  "name": "Richard",
+  "url": "https://google.com",
+  "page": 1,
+  "isNonProfit": true,
+  "address": {
+    "street": "fifth avenue",
+    "city": "NewYork city",
+    "country": "USA"
+  },
+  "link": [
+    {
+      "name": "demo#1",
+      "url": "https://twitter.com"
+    },
+    {
+      "name": "demo#2",
+      "url": "https://facebook.com"
+    },
+    {
+      "name": "demo#3",
+      "url": "https://fast.com"
+    }
+  ]
+}

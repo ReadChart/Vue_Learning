@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo6</title>
+
+    <!--解决闪烁-->
+    <style>
+        [v-clock]{
+            display: none;
+        }
+    </style>
+
+</head>
+<body>
+
+<div id="vue" v-clock>
+    <div>姓名：{{info.name}}</div>
+    <div>街道：{{info.address.street}}</div>
+    <div>城市：{{info.address.city}}</div>
+    <div>国家：{{info.address.country}}</div>
+    <a v-bind:href="info.url">链接</a>
+</div>
+
+<!--引入VueJS-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="text/javascript">
+    let vm = new Vue({
+        el: "#vue",
+        data(){
+            return {
+                //return parameters must the same as java String
+                info:{
+                    name: null,
+                    address:{
+                        street: null,
+                        city: null,
+                        country:null
+                    },
+                    url:null
+                }
+            }
+        },
+        mounted(){//hook function,
+            axios.get('../data.json').then(response=>(this.info = response.data));
+        }
+    });
+</script>
+</body>
+</html>

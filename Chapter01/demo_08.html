@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo8</title>
+</head>
+<body>
+<h1>Vue_Learning_Demo8</h1>
+<div id="app">
+    <p>{{currentTime1()}}</p>
+    <p>{{currentTime2}}</p>
+</div>
+
+<!--导入Vue.js-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    let vm = new Vue({
+        el:"#app",
+        data: {
+            message: "Hello Vue"
+        },
+        //可以重名，重名后只调用方法；
+        methods: {
+            currentTime1: function () {
+                return Date.now(); //return current timestamp
+            }
+            // returnTime: function () {
+            //     console.log(alert("currentTime1 is:" + this.currentTime1() + "\ncurrentTime2 is:" + this.currentTime2));
+            // }
+        },
+        computed: {
+            currentTime2: function(){
+                //当内容变化后将刷新缓存
+                this.message;
+                //return computed value
+                return Date.now();
+            }
+        }
+    })
+</script>
+</body>
+</html>

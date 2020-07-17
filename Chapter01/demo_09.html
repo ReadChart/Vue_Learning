@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo9</title>
+</head>
+<body>
+
+<div id="app">
+    <todo>
+        <todo-title slot="todo-title" :title="title"></todo-title>
+        <!--创建key属性让其有唯一ID，Vue 为了节省资源重复利用已有 DOM 节点，要求开发者给列表中的元素加上唯一的 key，在排序之类的操作时，不需要销毁创建新节点。-->
+        <todo-items slot="todo-items" v-for="(item, index) of todoItems"
+                    v-bind:item="item" v-bind:key="index" v-bind:index="index" v-on:do_remove="removeItem(index)"></todo-items>
+    </todo>
+</div>
+
+<!--导入Vue.js-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    Vue.component("todo", {
+        //反斜杠代替换行\
+        template:
+        '<div>\
+            <slot name="todo-title"></slot>\
+                <ul>\
+                    <slot name="todo-items"></slot>\
+                </ul>\
+        </div>'
+    });
+
+    Vue.component("todo-title", {
+        props: ['title'],
+        template: '<div>{{title}}</div>'
+    });
+
+    Vue.component("todo-items",{
+        props: ['item', 'index'],
+        //1、先将item和index传递，将事件绑定，
+        //此处onclick绑定方法名
+        template: '<li>{{item}}---{{index}}<button v-on:click="rm_itm">Delete</button></li>',
+        methods: {
+            //方法名大小写敏感
+            rm_itm: function (index) {
+                this.$emit('do_remove', index);
+            }
+        }
+    });
+
+    let vm = new Vue({
+        el: "#app",
+        data: {
+            title: 'Demo Title',
+            todoItems: ['Richard', 'Demo#09', 'Chapter#1']
+        },
+        methods: {
+            removeItem: function (index) {
+                console.log("Delete Succeed In " + this.todoItems[index]);
+                this.todoItems.splice(index, 1);
+            }
+        }
+    });
+</script>
+</body>
+</html>

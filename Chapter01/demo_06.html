@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo6</title>
+</head>
+<body>
+<div id="app">
+
+<!--当驼峰命名法时，例如firstComponent，第一个标签生效，第二个无效，aka.<first-component></first-component>，标签内不允许大写-->
+<!--    <first-component></first-component>-->
+<!--    <firstComponent></firstComponent>-->
+
+<!--取items的值并将其赋值给item，通过itemPicker绑定组件模板-->
+    <first-component v-for="item in items" v-bind:item-picker="item"></first-component>
+
+
+</div>
+
+
+<!--引入VueJS-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    //定义一个组件
+    Vue.component("firstComponent" ,{
+        // template: '<li>Hello</li>'
+
+        //通过props取值
+        props: ['itemPicker'],
+        template: '<li>{{itemPicker}}</li>'
+
+
+    });
+
+
+    let vm = new Vue({
+       el: '#app',
+        data: {
+           items: ["Item#1", "Item#2", "Item#3", "Item#4", "Item#5"]
+        }
+    });
+
+
+</script>
+</body>
+</html>

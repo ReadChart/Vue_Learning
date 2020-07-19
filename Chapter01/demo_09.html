@@ -9,9 +9,19 @@
 <div id="app">
     <todo>
         <todo-title slot="todo-title" :title="title"></todo-title>
+
         <!--创建key属性让其有唯一ID，Vue 为了节省资源重复利用已有 DOM 节点，要求开发者给列表中的元素加上唯一的 key，在排序之类的操作时，不需要销毁创建新节点。-->
-        <todo-items slot="todo-items" v-for="(item, index) of todoItems"
-                    v-bind:item="item" v-bind:key="index" v-bind:index="index" v-on:do_remove="removeItem(index)"></todo-items>
+        <!--可通过样式包裹slot标签-->
+        <table>
+            <tr>
+                <th>项目</th>
+                <th>索引</th>
+                <th>删除</th>
+            </tr>
+            <todo-items slot="todo-items" v-for="(item, index) of todoItems"
+                        v-bind:item="item" v-bind:key="index" v-bind:index="index" v-on:do_remove="removeItem(index)"></todo-items>
+        </table>
+
     </todo>
 </div>
 
@@ -20,6 +30,7 @@
 <script>
     Vue.component("todo", {
         //反斜杠代替换行\
+        //todo包含:todo-title,todo-items，slot中放置todo-title,todo-items
         template:
         '<div>\
             <slot name="todo-title"></slot>\
@@ -38,7 +49,21 @@
         props: ['item', 'index'],
         //1、先将item和index传递，将事件绑定，
         //此处onclick绑定方法名
-        template: '<li>{{item}}---{{index}}<button v-on:click="rm_itm">Delete</button></li>',
+        //注意样式设计
+        template:
+            '<tr>\
+                <td>\
+                    {{item}}\
+                </td>\
+                <td>\
+                    {{index}}\
+                </td>\
+                <td>\
+                    <button v-on:click="rm_itm">\
+                        Delete\
+                    </button>\
+                </td>\
+            </tr>',
         methods: {
             //方法名大小写敏感
             rm_itm: function (index) {

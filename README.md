@@ -496,7 +496,105 @@
 
 ### 2.为什么要用Axios
 
-//TODO
+`Vue.js`是一个视图层框架，严格遵守SoC(关注度分离原则)，所以`Vue.js`并不包含`AJAX`
+
+的通信功能，为了解决通信问题，作者单独开发了`vue-resources`插件，不过在其2.0版本以后就停止维护，并推荐`Axios`框架。不推荐使用`jQuery`，因为它操作DOM太频繁。
 
 
+
+### 3.第一个Axios应用程序
+
+先在项目里模拟一段JSON数据，创建data.json数据内容如下
+
+```json
+//data.json
+{
+  "name": "Richard",
+  "url": "https://google.com",
+  "page": 1,
+  "isNonProfit": true,
+  "address": {
+    "street": "fifth avenue",
+    "city": "NewYork city",
+    "country": "USA"
+  },
+  "link": [
+    {
+      "name": "demo#1",
+      "url": "https://twitter.com"
+    },
+    {
+      "name": "demo#2",
+      "url": "https://facebook.com"
+    },
+    {
+      "name": "demo#3",
+      "url": "https://fast.com"
+    }
+  ]
+}
+```
+
+放置在项目根目录下
+
+**Vue生命周期**：红框内为钩子函数
+
+![Vue生命周期](https://i.imgur.com/LhP8mtT.png)
+
+```html
+<!--demo_07.html-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo7</title>
+
+    <!--手动解决闪烁而问题-->
+    <style>
+        [v-clock]{
+            display: none;
+        }
+    </style>
+
+</head>
+<body>
+
+<div id="vue" v-clock>
+    <div>姓名：{{info.name}}</div>
+    <div>街道：{{info.address.street}}</div>
+    <div>城市：{{info.address.city}}</div>
+    <div>国家：{{info.address.country}}</div>
+    <div>是否盈利：{{info.isNonProfit}}</div>
+    <a v-bind:href="info.url">链接</a>
+</div>
+
+<!--引入VueJS-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="text/javascript">
+    let vm = new Vue({
+        el: "#vue",
+        data(){
+            return {
+                //return parameters must the same as java String
+                info:{
+                    name: null,
+                    isNonProfit: null,
+                    address:{
+                        street: null,
+                        city: null,
+                        country:null
+                    },
+                    url:null
+                }
+            }
+        },
+        mounted(){//hook function,钩子函数，编译好的HTML挂载到页面完成后执行的事件钩子，此钩子函数一般会做一些AJAX请求获取数据，进行数据初始化， ATTN：mounted在整个实例中只执行一次
+            axios.get('../data.json').then(response=>(this.info = response.data));
+        }
+    });
+</script>
+</body>
+</html>
+```
 

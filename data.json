@@ -1,14 +1,14 @@
 {
   "name": "Richard",
-  "url": "https://google.com",
+  "url": "https://chrome.google.com",
   "page": 1,
   "isNonProfit": true,
   "address": {
-    "street": "fifth avenue",
+    "street": "Fifth Avenue",
     "city": "NewYork city",
     "country": "USA"
   },
-  "link": [
+  "links": [
     {
       "name": "demo#1",
       "url": "https://twitter.com"

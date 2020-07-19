@@ -31,6 +31,8 @@
         computed: {
             currentTime2: function(){
                 //当内容变化后将刷新缓存
+                //用途：可以在页面上数据改变后实时计算出改变后所产生的结果，例如：1(用户原数据1)+1(用户原数据2)=2(对应展示结果)
+                //1(用户原数据1)+2(用户刷新数据)=3(对应展示结果)
                 this.message;
                 //return computed value
                 return Date.now();

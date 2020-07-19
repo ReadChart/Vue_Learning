@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Vue_Learning_Demo7</title>
 
-    <!--解决闪烁-->
+    <!--手动解决闪烁而问题-->
     <style>
         [v-clock]{
             display: none;
@@ -16,10 +16,15 @@
 
 <div id="vue" v-clock>
     <div>姓名：{{info.name}}</div>
-    <div>街道：{{info.address.street}}</div>
-    <div>城市：{{info.address.city}}</div>
+
     <div>国家：{{info.address.country}}</div>
+    <div>城市：{{info.address.city}}</div>
+    <div>街道：{{info.address.street}}</div>
+
+    <div>是否盈利：{{info.isNonProfit}}</div>
     <a v-bind:href="info.url">链接</a>
+    <li v-for="item in info.links"><a :href="item.url"><button type="submit">{{item.name}}</button></a>----URL:{{item.url}}</li>
+
 </div>
 
 <!--引入VueJS-->
@@ -33,6 +38,7 @@
                 //return parameters must the same as java String
                 info:{
                     name: null,
+                    isNonProfit: null,
                     address:{
                         street: null,
                         city: null,
@@ -42,7 +48,7 @@
                 }
             }
         },
-        mounted(){//hook function,
+        mounted(){//hook function,钩子函数，编译好的HTML挂载到页面完成后执行的事件钩子，此钩子函数一般会做一些AJAX请求获取数据，进行数据初始化， ATTN：mounted在整个实例中只执行一次
             axios.get('../data.json').then(response=>(this.info = response.data));
         }
     });

@@ -598,3 +598,405 @@
 </html>
 ```
 
+
+
+
+
+## 第六章：计算属性、内容分发、自定义事件
+
+### 1.什么是计算属性
+
+> ​	计算属性的重点突出在`属性`两字上(名词)，首先它是个`属性`，其次它有`计算`的能力(动词)，这里的`计算`就是个函数；简单点说，他就是一个能够将计算结果缓存起来的属性(将行为转化成了静态的属性)，仅此而而已；可以想象为缓存。
+
++ 也就是说，当缓存刷新时，计算结果也将刷新，如果参数是动态的话，那计算结果很有可能和原来的不同
+
+```html
+<!--demo_08.html-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue_Learning_Demo8</title>
+</head>
+<body>
+<h1>Vue_Learning_Demo8</h1>
+<div id="app">
+    <p>{{currentTime1()}}</p>
+    <p>{{currentTime2}}</p>
+</div>
+
+<!--导入Vue.js-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    let vm = new Vue({
+        el:"#app",
+        data: {
+            message: "Hello Vue"
+        },
+        //可以重名，重名后只调用方法；
+        //注意：此处定义出来的是方法
+        methods: {
+            currentTime1: function () {
+                return Date.now(); //return current timestamp
+            }
+            // returnBothTime: function () {
+            //     console.log(alert("currentTime1 is:" + this.currentTime1() + "\ncurrentTime2 is:" + this.currentTime2));
+            // }
+        },
+        //此处返回的是属性
+        computed: {
+            currentTime2: function(){
+                //当内容变化后将刷新缓存
+                this.message;
+                //return computed value
+                //返回计算出来的结果
+                return Date.now();
+            }
+        }
+    })
+</script>
+</body>
+</html>
+```
+
+
+
++ 在console里调用currentTime1()时，结果会刷新：![currentTime1()](https://i.imgur.com/vp8Mzji.png)
+
++ 在console里调用currentTime2时，结果不刷新，因为已经作为属性写入缓存：![currentTime2](https://i.imgur.com/3KYtcap.png)
+
++ 通过改变data中的值刷新缓存之后：![Cache Flushed](https://i.imgur.com/QTfh9YR.png)
+
+**说明**：
+
++ methods：定义方法，调用方法使用currentTime1()，需要带括号。
++ computed：定义计算属性，调用属性使用currentTime2，不需要带括号；this.message是为了能够让currentTime2观察到数据变化而变化
++ 如果在方法中的值发生了变化，则缓存就会刷新！可以在console使用`vm.message="Change Value"`，改变下数据的值，再次测试观察效果！
+
+**结论**：
+
+​		调用方法时，每次都需要进行计算，既然有计算过程则必定产生系统开销，那如果这个结果是不经常变化的呢？此时就可以考虑将这个结果缓存起来，采用计算属性可以很方便的做到这一点，**计算属性的主要特征就是为了将不经常变化的计算结果进行缓存，以节约系统开销。**
+
+
+
+
+
+### 2.内容分发
+
+​		在`Vue.js`中我们使用`<slot>`元素作为承载分发内容的出口，作者称其为`插槽`，可以应用在组合组件的场景中。
+
+
+
+**实现**：
+
+​		制作一个待办事项组件(todo)，该组件由代办标题和代办内容组成，但这三个组件又是**相互独立**的，该如何操作呢？
+
+​			**第一步**：定义一个待办事项的组件：
+
+```html
+<div id="app">
+    <todo>
+	</todo>
+</div>
+<script type="text/javascript">
+    Vue.component("todo", {
+        //反斜杠代替换行\
+        //todo包含:todo-title,todo-items，slot中放置todo-title,todo-items
+        template://name属性绑定插槽
+        '<div>\
+            <div>todo_list</div>\
+                <ul>\
+                    <li>learning Java</li>
+                </ul>\
+        </div>'
+    });
+</script>
+```
+
+​			**第二步**：我们需要让待办事项的标题和值实现动态绑定，怎么做呢？我们可以先留出一个插槽；
+
+1. 添加`<slot>`插槽
+
+```javascript
+Vue.component("todo", {
+        //反斜杠代替换行\
+        //todo包含:todo-title,todo-items，slot中放置todo-title,todo-items
+        template://name属性绑定插槽
+        '<div>\
+            <slot name="todo-title"></slot>\
+                <ul>\
+                    <slot name="todo-items"></slot>\
+                </ul>\
+        </div>'
+    });
+```
+
+2. 定义一个名为`todo-title`的待办事项标题组件和`todo-items`的待办事项内容组件
+
+```javascript
+Vue.component('todo-title', {
+    props: ['title'],
+    template: '<div>{{title}}</div>'
+});
+```
+
+```javascript
+Vue.component('todo-items', {
+    props: ['item', 'index'],
+    template: '<li>{{index + 1}}---{{item}}</li>'
+});
+```
+
+3. 实例化Vue并初始化数据
+
+```javascript
+let vm = new Vue({
+    el: '#vue',
+    data: {
+        todoItems: ['Item#1', 'Item#2', 'Item#3', 'Item#4']
+    }
+});
+```
+
+4. 将这些值通过插槽插入
+
+```html
+<div id="vue">
+    <todo>
+        <todo-title slot="todo-title" title="Vue.js Learning"></todo-title>
+        <todo-items slot="todo-items" v-for="(item, index) in todoItems" 
+                    v-bind:item="item" v-bind:index="index"></todo-items>
+    </todo>
+</div>
+```
+
+至此，todo-title和todo-items组件分别被分发到了todo组件的todo-title和todo-items插槽中。
+
+### 3.自定义事件
+
+​		通过以上代码不难发现，数据项在Vue的实例中，但删除操作要在组件中完成，那么组件如何才能删除Vue实例中的数据呢？此时就涉及到了参数传递与事件分发了，Vue为我们提供了自定义事件的功能很好的帮助我们解决了这个问题；使用this.$emit('自定义事件名', 参数)，操作过程如下：
+
+1. 在vue实例中，增加了methods对象并定义一个名为removeTodoItems的方法
+
+```javascript
+let vm = new Vue({
+    el: '#vue',
+    data: {
+        title: 'Vue.js Learning',
+        todoItems: ['Item#1','Item#2','Item#3','Item#4','Item#5','Item#6']
+    },
+    methods: {
+        removeItem: function (index) {
+            console.log(this.todoItems[index] + ' deleted successfully! ');
+            this.todoItems.splice(index, 1);
+        }
+    }
+});
+```
+
+2. 修改todo-items待办内容的组件代码，增加一个删除按钮，并且绑定事件
+
+```javascript
+Vue.component("todo-items",{
+    props: ['item', 'index'],
+    //1、先将item和index传递，将事件绑定，
+    //此处onclick绑定方法名
+    //注意样式设计
+    template:
+        '<tr>\
+            <td>\
+                {{item}}\
+            </td>\
+            <td>\
+                {{index}}\
+            </td>\
+            <td>\
+                <button v-on:click="rm_itm">\
+                    Delete\
+                </button>\
+            </td>\
+        </tr>',
+    methods: {
+        //方法名大小写敏感
+        rm_itm: function (index) {
+    	//此处do_remove为自定义事件
+            this.$emit('do_remove', index);
+        }
+    }
+});
+```
+
+3. 修改todo-items待办内容组件的HTML代码，增加一个自定义事件，比如叫do_remove，可以和组件的方法进行绑定，然后绑定到vue的方法中！
+
+```html
+<!--创建key属性让其有唯一ID，Vue 为了节省资源重复利用已有 DOM 节点，要求开发者给列表中的元素加上唯一的 key，在排序之类的操作时，不需要销毁创建新节点。-->
+<!--可通过样式包裹slot标签-->
+<table>
+    <tr>
+        <th>项目</th>
+        <th>索引</th>
+        <th>删除</th>
+    </tr>
+    <todo-items slot="todo-items" v-for="(item, index) of todoItems"
+                v-bind:item="item" v-bind:key="index" v-bind:index="index" v-on:do_remove="removeItem(index)"></todo-items>
+</table>
+```
+
+4. 逻辑理解
+
+![逻辑理解](https://i.imgur.com/GuwaBcN.png)
+
+
+
+
+
+## #入门小结
+
+​		**核心：数据驱动，组件化**
+
+​		**优点：借鉴了AngulaJS的模块化开发和React的虚拟DOM，虚拟DOM就是把DOM操作放到内存中执行；**
+
+### 		**常用的属性：**
+
++ `v-if`
++ `v-else-if`
++ `v-else`
++ `v-for`
++ `v-on`绑定事件，简写`@`
++ `v-model`数据双向绑定
++ `v-bind`给组件绑定参数，简写`:`
+
+
+
+### 		**组件化：**
+
++ 组合组件slot插槽
++ 组件内部绑定事件需要使用到的`this.$emit('事件名', 参数)`
++ 计算属性的特色，缓存计算数据
+
+​		**遵循SoC关注度分离原则，Vue是纯粹的视图框架，并不包含像AJAX之类的通信功能，为了解决通信问题，需要使用Axios框架做异步通信。**
+
+
+
+### 		补充说明：
+
+​		Vue的开发都是要基于NodeJS，实际开发采用vue-cli脚手架开发，vue-router路由，vuex做状态管理，Vue UI界面通常使用ElementUI(饿了么出品)，或者ICE(阿里巴巴出品)来快速搭建前端项目。
+
+
+
+
+
+# Vue
+
+
+
+## 第一章：第一个vue-cli项目
+
+
+
+
+
+### 1.什么是vue-cli
+
+​	vue-cli官方提供的一个脚手架，用于快速生成一个vue项目模板；
+
+​	预先定义好的目录结构及基础代码，就好比创建`maven`项目时可以选择创建一个骨架项目，这个骨架项目就是脚手架，更快速开发。
+
+
+
+​		**主要的功能**：
+
++ 统一的目录结构
++ 本地调试
++ 热部署
++ 单元测试
++ 集成打包上线
+
+
+
+### 2.需要的环境
+
++ NodeJS 配置环境
++ git
+
+
+
+**NodeJS淘宝镜像加速**
+
+```bash
+# -g全局安装
+
+npm install cnpm -g
+
+# 或使用如下语句解决速度慢问题 (Recommanded)
+npm install --register=https://registery.npm.taobao.org
+```
+
+
+
+**修改NPM默认下载安装位置**
+
+````bash
+#更改全局安装路径
+
+npm config set prefix "/ur/custom/path/node_global" 
+
+#更改缓存路径
+
+npm config set cache "/ur/custom/path/node_cache"
+````
+
+
+
+
+
+**安装`vue-cli`**
+
+```bash
+npm install vue-cli
+
+# 测试安装是否成功
+# 查看当前可以基于那些模板创建vue应用程序，通常使用 webpack
+
+vue list
+```
+
+![vue-list](https://i.imgur.com/lOZlffs.png)
+
+
+
+
+
+### 3.第一个vue-cli程序
+
+
+
+1. 创建一个Vue项目，建立空文件夹
+2. 创建一个基于webpack模板的vue应用程序(在当前目录下打开终端)
+
+```bash
+# 此处 $ProjectName 是项目名称
+
+vue init webpack $ProjectName
+```
+
+3. 一路选择`No`即可
+4. 说明：
+   + Project Name：项目名称
+   + Project description：项目描述
+   + Author：项目作者
+   + install vue-router：是否安装`vue-router`
+   + USE ESLint to lint your code：是否使用`ESLint`做代码检查
+   + Set up unit tests：单元测试相关
+   + Setup e2e tests with Nightwatch：单元测试相关
+   + Should we run npm install for you after the project has been created：创建完成后直接初始化
+5. 初始化并运行
+
+```bash
+cd $ProjectName
+
+npm install # 通过package.json中的版本描述进行安装，相当于pom.xml
+
+npm run dev
+```
+

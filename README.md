@@ -1000,3 +1000,976 @@ npm install # 通过package.json中的版本描述进行安装，相当于pom.xm
 npm run dev
 ```
 
+
+
+
+
+##  第二章：Webpack学习
+
+
+
+
+
+### 1.什么是Webpack？
+
+> ​		本质上，webpack是一个现代JavaScript应用程序的静态模块打包器(Module bundler)。当webpack需要处理应用程序时，它会递归的构建一个依赖关系图(dependency graph)，其中包含应用程序需要的每个模块，然后将其打包至一个或多个bundle。
+>
+> ​		Webpack是当下最热门的前端资源模块化管理和打包工具，它可以将许多松散耦合的模块按照依赖和规则打包成符合生产环境部署的前端资源，还可以将按需加载的模块进行代码分离，等到实际需要时再异步加载。
+
+
+
+
+
+### 2.模块化的演进
+
+
+
+**Script标签**
+
+------
+
+
+```html
+<script src="module#1.js" ></script>
+<script src="module#2.js" ></script>
+<script src="module#3.js" ></script>
+<script src="module#4.js" ></script>
+```
+
+​		这是最原始的JavaScript文件的加载方式，如果把每一个文件看作是一个模块，那么他们的接口通常是暴露在全局作用域下，也就是定义在window对象中，不同模块调用都是一个作用域。
+
+​		这种原始的加载方式暴露了一些显而易见的**弊端**：
+
++ 全局作用域下容易造成变量冲突
++ 文件只能按照<script>的书写顺序进行加载
++ 开发人员必须主观解决模块和代码库的依赖关系
++ 大型项目中各种资源难以管理，长期积累的问题导致代码库混乱不堪
+
+
+
+**CommonsJS**
+
+------
+
+​		服务器端的NodeJS遵循CommonsJS规范，核心思想是允许模块通过require方法来同步加载所需以来的其他模块，然后通过exports或module.exports来导出需要暴露的接口。
+
+```javascript
+require("module");
+require("../module.js");
+export.doStuff = function() {};
+module.exports = someValue;
+```
+
+**优点：**
+
++ 服务器端模块化便于重用
++ NPM中已经有超过45万个可以使用的模块包
++ 简单易用
+
+**缺点：**
+
++ 同步的模块加载方式不适合在浏览器环境中，同步意味着阻塞加载，浏览器资源是异步加载的
++ 不能非阻塞的并行加载多个模块
+
+**实现：**
+
++ 服务端的NodeJS
++ Browserify，浏览器端的CommonsJS实现，可以使用NPM的模块，但是编译打包后的文件体积较大
++ modules-webmake，类似Browserify，但不如Browserify灵活
++ wreq，Browserify的前身
+
+
+
+**AMD**
+
+------
+
+​		Asynchronous Module Definition规范其实主要一个主要接口define(id?, dependencies?, factory);它要在上名模块的时候指定所有依赖dependencies，并且还要当作形参传到factory中，对依赖的模块提前执行。
+
+```javascript
+define("module", ["dependency#1", "dependency#2"], function(dpdnc1, dpdnc2) {
+    return someExportValues;
+});
+require(["module", "../file.js"], function(module, file) {});
+```
+
+**优点：**
+
++ 适合在浏览器环境中异步加载模块
++ 可以并行加载多个模块
+
+**缺点：**
+
++ 提高开发成本，代码的阅读和书写比较困难，模块定义方式的语义不畅
++ 不符合通用的模块化思维方式，是一种妥协的实现
+
+**实现：**
+
++ RequireJS
++ curl
+
+
+
+**CMD**
+
+------
+
+​		Commons Module Definition规范和AMD很相似，尽量保持简单，并与CommonsJS和NodeJS的Modules规范保持了很大的兼容性。
+
+```javascript
+define(function(require, exports, module) {
+    var $ =require("jQuery");
+    var Spinning = require("./spinning");
+    exports.doSomething = ...;
+    module.exports = ...;
+})
+```
+
+
+
+**优点：**
+
++ 依赖就近，延迟执行
++ 可以很容易在NodeJS中运行
+
+**缺点：**
+
++ 依赖SPM打包，模块的加载逻辑偏重
+
+**实现**
+
++ Sea.js
++ coolie
+
+
+
+**ES6模块**
+
+------
+
+​		EcmaScript6增加了JavaScript语言层面的模块体系定义。ES6模块的设计思想，是尽量静态化，是编译时就能确定模块的依赖关系，以及输出和输入的变量。CommonsJS和AMD模块，都只能在运行是确定这些东西。
+
+```javascript
+import "jQuery";
+export function doStuff() {};
+module "localModule" {};
+```
+
+**优点：**
+
++ 容易进行静态分析
++ 面向未来的EcmaScript标准
+
+**缺点：**
+
++ 原生浏览器还没有实现该标准
++ 全新的命令，新版NodeJS才支持
+
+**实现**
+
++ Babel
+
+**大家期望的模块系统**
+
++ 多种模块化风格
++ 提高代码复用
++ 所有资源都要模块化
+
+
+
+
+
+### 3.安装Webpack
+
+
+
+**安装**
+
+------
+
+```bash
+npm install webpack -g
+npm install webpack-cli -g
+# 通过 -v 参数输出确定安装成功
+```
+
+
+
+**配置**
+
+------
+
+​		创建`webpack.config.js`配置文件
+
++ entry：入口文件，指定WebPack用哪个文件作为项目的入口
++ output：输出，指定WebPack把处理完的文件放置到指定的路径
++ module：模块，用于处理各类型的文件
++ plugins：插件，如热更新，代码重用等
++ resolve：设置路径指向
++ watch：监听，用于设置文件改动后直接打包
+
+```javascript
+module.export = {
+	entry: "",
+    output: {
+        path: "",
+        filename: ""
+    },
+    module: {
+        loaders: [
+            {test: /\.js$/, loader: ""}
+        ]
+    },
+    plugins: {},
+    resolve: {},
+    watch: true
+}
+```
+
+直接运行`webpack`命令打包
+
+
+
+### 4.使用webpack
+
+------
+
+1. 创建项目
+2. 创建一个名为modules的目录，用于放置JS模块等资源文件
+3. 在modules下创建模块文件，如hello.js，用于编写JS模块相关代码
+
+```javascript
+//暴露一个方法：demo
+exports.demo = function() {
+    document.write("<div>#1 demo</div>");
+};
+```
+
+4. 在modules下创建一个名为main.js的入口文件，用于打包时设置entry属性
+
+```javascript
+// require 导入一个模块，就可以调用这个模块中的方法了
+var Demo = require("./Demo");
+Demo.demo();
+```
+
+5. 在项目目录下创建webpack.config.js配置文件，使用webpack命令打包
+
+```javascript
+module.exports = {
+    entry: "./modules/main.js",
+    output: {
+        filename: "./js/bundle.js"
+    }
+};
+```
+
+6. 在项目目录下创建HTML页面，如index.html，导入WebPack打包后的JS文件
+
+```html
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Learning Vue</title>
+    </head>
+    <body>
+        <script src="dist/js/bundle.js"></script>
+    </body>
+</html>
+```
+
+7. 在IDEA控制台中直接执行webpack；如果失败的话，使用管理员权限运行
+8. 运行html看效果
+
+**说明：**
+
+```bash
+# 参数 --watch用于监听变化
+webpack --watch
+```
+
+
+
+## 第三章：vue-router路由
+
+
+
+### 1.说明
+
+​		Vue Router是Vue.js官方的路由管理器。它和Vue.js的核心深度集成，让构建**单页面应用**变得易如反掌。包含的功能：
+
++ 嵌套的路由/视图表
++ 模块化的、基于组件的路由配置
++ 路由参数、查询、通配符
++ 基于Vue.js过度系统的视图过渡效果
++ 细粒度的导航控制
++ 带有自动激活的CSS class的链接
++ HTML5历史模式或hash模式，在IE9中自动降级
++ 自定义的滚动条行为
+
+### 2.安装
+
+```bash
+npm install vue-router --save-dev
+```
+
+如果在一个模块化工程中使用它，必须要通过Vue.use()明确地安装路由功能：
+
+```javascript
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+
+Vue.use(VueRouter);
+```
+
+### 3.测试
+
+1. 先删除没有用的东西
+2. `component`目录下存放我们自己编写的组件
+3. 定义一个`Content.vue`的组件
+
+```html
+<template>
+	<div>
+        <h1>
+            Content Page
+        </h1>
+    </div>
+</template>
+<script>
+	export default {
+        name: "Content"
+    }
+</script>
+```
+
+4. 安装路由，在src目录下，新建一个文件夹：`router`，专门用来存放路由
+
+```javascript
+import Vue from 'vue'
+// 导入路由插件
+import VueRouter from 'vue-router'
+// 导入上面定义的组件
+import Content from '../components/Content'
+import Main from '../components/main'
+// 安装路由
+Vue.use(VueRouter);
+export default new VueRouter({
+    routes: [
+        {
+            // 路由路径
+            path: '/content',
+            // 路由名称
+        	name: 'Content',
+            // 跳转到组件
+        	component: Content
+        }, {
+            path: '/main',
+            name: 'main',
+            component: Main
+        }
+    ]
+})
+```
+
+5. 在`main.js`中配置路由
+
+```javascript
+import Vue from 'vue'
+import App from './App'
+// 导入上面创建的路由配置目录
+import router from './router'
+// 来关闭生产模式下给出的提示
+Vue.config.productionTip=false;
+
+new Vue({
+    el: '#app',
+    // 配置路由
+    router,
+    component: {App},
+    template: '<App/>'
+});
+```
+
+6. 在`App.vue`中使用路由
+
+```html
+<template>
+	<div id="app">
+        <!--
+		  router-link: 默认会被渲染成一个<a>标签，to属性为指定链接
+		  router-view: 用于渲染路由匹配到的组件
+		-->
+        <router-link to="/">Main Page</router-link>
+        <router-link to="/content">Content Page</router-link>
+        <router-view></router-view>
+    </div>
+</template>
+<script>
+	export default {
+        name: 'App'
+    }
+</script>
+<style>
+    #app {
+        font-family: 'Avenir', Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-align: center;
+        color: #2c3e50;
+        margin-top: 60px;
+    }
+</style>
+```
+
+
+
+
+
+## 第四章：实战快速上手
+
+
+
+
+
+### 1.创建工程
+
+*注意：在管理员模式下运行命令行*
+
+1. 创建一个名为hello-vue的工程`vue init webpack hello-vue`
+2. 安装依赖，我们需要安装`vue-router`、`element-ui`、`sass-loader`和`node-sass`四个插件
+
+```bash
+# 进入工程目录
+cd hello-vue
+# 安装vue-router
+npm install vue-router --save-dev
+# 安装element-ui
+npm i element-ui -S
+# 安装依赖
+npm install
+# 安装SASS加载器
+npm install sass-loader node-sass --save-dev
+# 启动测试
+npm run dev
+```
+
+3. npm命令解释：
+
++ `npm install moduleName`：安装模块到目录下
++ `npm install -g moduleName`：-g的意思是全局安装，即npm config prefix的路径
++ `npm install --save moduleName`：--save的意思是将模块安装到项目的目录下，并在package文件的dependencies节点写入依赖，-S为该命令的缩写
++ `npm install --save-dev moduleName`：--save-dev的意思是将模块安装到项目的目录下，并在package文件的devDependencies节点写入依赖，-D为该命令的缩写
+
+### 2.创建登陆页面
+
+1. **目录：**
+
+`src`
+
+​	`assets`：用于存放资源文件
+
+​	`component`：用于存放Vue功能组件
+
+​	`views`：用于存放Vue视图组件
+
+​	`router`：用于存放vue-router配置
+
+2. **创建首页视图，在views目录下创建一个名为Main.vue的视图组件；**
+
+```html
+<template>
+	<div>
+        Main page
+    </div>
+</template>
+<script>
+	export default{
+        name: "Main"
+    }
+</script>
+
+<style scoped>
+
+</style>
+```
+
+3. **创建登录页视图在views目录下创建一个名为Login.vue的视图组件，其中el-*的元素为ElementUI组件；**
+
+```html
+<template>
+	<div>
+        <el-form ref="loginForm" :model="form" 
+                 :rules="rules" label-width="80px" class="login-box">
+            <h3 class="login-title">
+                Welcome To Login
+            </h3>
+            <el-form-item label="Username" prop="username">
+                <el-input type="text" placeholder="Please Input Username" 
+                          v-model="form.username"/>
+            </el-form-item>
+            <el-form-item label="Password" prop="password">
+                <el-input type="password" placeholder="Please Input Password" 
+                          v-model="form.password"/>
+            </el-form-item>
+            <el-form-item>
+            	<el-button type="primary" v-on:click="onSubmit('loginForm')">
+                	Login
+                </el-button>
+            </el-form-item>
+        </el-form>
+        
+        <el-dialog title="Tips" :visible.sync="dialogVisible" 
+                   width="30%" :before-close="handleClose">
+        	<span>Please Input Username And Password</span>
+            <span slot="footer" class="dialog-footer">
+            	<el-button type="primary" @click="dialogVisible" = false>
+                	Confirmed
+                </el-button>
+            </span>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+	export default {
+        name: "Login",
+        data() {
+            return {
+                form: {
+                    username: '',
+                    password: ''
+                },
+                // 表单验证
+                rules:{
+                    username: [
+                        {
+                            required: true, 
+                            message: 'Username Required', 
+                            trigger: 'blur'
+                        }
+                    ],
+                    password: [
+                        {
+                            required: true,
+                            message: 'Password Required',
+                            trigger: 'blur'
+                        }
+                    ]
+                },
+                dialogVisible: false
+            }
+        },
+        methods: {
+            onSubmit(formName) {
+                // 为表单绑定验证
+                this.$ref[formName].validate((valid) => {
+                    if (valid) {
+                        // 使用vue-router路由到指定页面，改方式称之为编程式导航
+                        this.$router.push("/main");
+                    } else {
+                        this.dialogVisible = true;
+                        return false;
+                    }
+                });
+            }
+        }
+    }
+</script>
+
+
+<style lang="scss" scoped>
+    .login-box {
+        border: 1px solid #DCDFE6;
+        width: 350px;
+        margin: 180px auto;
+        padding: 35px 35px 15px 35px;
+        border-radius: 5px;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        box-shadow: 0 0 25px #909399;
+    }
+    
+    .login-title {
+        text-align: center;
+        margin: 0 auto 40px auto;
+        color: #303133
+    }
+</style>
+```
+
+4. **创建路由，在router目录下创建一个名为index.js的vue-router路由配置文件**
+
+```javascript
+// index.js
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+
+import Login from '../views/Login'
+import Main from '../views/Main'
+
+Vue.use(VueRouter);
+
+export default new VueRouter({
+    routes: [
+        {
+            // Login Page
+            path: '/login',
+            name: 'Login',
+            component: Login
+        },
+        {
+            // Main Page
+            path: '/main',
+            name: 'Main',
+            component: Main
+        }
+    ]
+});
+```
+
+5. **在Main.js导入路由**
+
+```javascript
+// Main.js
+import Vue from 'vue'
+import App from './App'
+
+import routers from './router'
+
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+
+// install router
+
+Vue.use(routers);
+// 安装ElementUI
+Vue.use(ElementUI);
+
+new Vue({
+    el: '#app',
+    // 启用路由
+    router,
+    // 启用ElementUI
+	render: h => h(App) //ElementUI
+});
+```
+
+6. **修改App.vue**
+
+```html
+<template>
+	<div id="app">
+        <router-view>
+        </router-view>
+    </div>
+</template>
+
+<script>
+	export default {
+        name: 'App'
+    }
+</script>
+```
+
+
+
+
+
+### 3.路由嵌套
+
+​		嵌套路由又称子路由，在实际应用中，通常由多层嵌套的组件组合而成。同样的，URL中各段动态路径也按某种结构对应嵌套的各层组件，例如：
+
+```
+/user/foo/profile				/user/foo/posts
++--------------+				+------------+
+| User         |				|User		 |	
+| +--------+   |				| +--------+ |
+| |Profile |   |  +---------->  | |Posts   | |
+| |		   |   |				| |        | |
+| +--------+   |				| +--------+ |
++--------------+				+------------+
+```
+
+1. 用户信息组件，在views/user目录下创建一个名为Profile.vue的视图组件；
+
+```html
+<template>
+	<div>
+        Profile
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "UserProfile"
+    }
+</script>
+
+<style scoped>
+
+</style>
+```
+
+2. 用户列表组件在views/user目录下创建一个名为List.vue的视图组件；
+
+```html
+<template>
+	<div>
+        User List
+    </div>
+</template>
+<script>
+	export default {
+        name: "UserList"
+    }
+</script>
+
+<style scoped>
+
+</style>
+```
+
+3. 配置嵌套路由修改router目录下的index.js路由配置文件，代码如
+
+```javascript
+// index.js
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+
+import Login from '../views/Login'
+import Main from '../views/Main'
+
+// 用于嵌套路由的组件
+import UserProfile from '../views/user/Profile'
+import UserList from '../views/user/List'
+
+Vue.use(VueRouter);
+
+export default new Router({
+    routes: [
+        {
+            // Login Page
+            path: '/login',
+            name: 'Login',
+            component: Login
+        },
+        {
+            // Main Page
+            path: '/main',
+            name: 'Main',
+            component: Main,
+            // 配置嵌套路由
+            children: [
+                {
+                    path: '/user/profile', 
+                    componentL UserProfile
+                },{
+                    path: '/user/list',
+                    component: UserList
+                },
+            ]
+        }
+    ]
+});
+```
+
+主要在路由配置中添加了children数组配置，用于在该组下设置嵌套路由
+
+4. 修改首页视图，我们修改Main.vue视图组件，此处使用了ElementUI布局容器组件，代码如下：
+
+```html
+<template>
+	<div>
+        <el-container>
+        	<el-aside width="200px">
+            	<el-menu :default-openeds="['1']">
+                    <el-submenu index="1">
+                		<template slot="title">
+                    		<i class="el-icon-caret-right"></i>
+                        	User Management
+                    	</template>
+                    	<el-menu-item-group>
+                    		<el-menu-item index="1-1">
+                        		<router-link to="/user/profile">Profile</router-link>
+                        	</el-menu-item>
+                        	<el-menu-item index="1-2">
+                        		<router-link to="/user/list">User List</router-link>
+                        	</el-menu-item>
+                    	</el-menu-item-group>
+                    </el-submenu>
+                    <el-submenu index="2">
+                    	<template slot="title"><i class="el-icon-caret-right"></i>Content Management</template>
+                    </el-submenu>
+                </el-menu>
+            </el-aside>
+            
+            
+            <el-container>
+                <el-header style="text-align: right; font-size: 12px">
+                	<el-dropdown>
+                    	<i class="el-icon-setting" style="margin-right: 15px"></i>
+                        <el-dropdown-menu slot="dropdown">
+                        	<el-dropdown-item>Profile</el-dropdown-item>
+                        	<el-dropdown-item>Logout</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                </el-header>
+                <el-main>
+                	<router-view/>
+                </el-main>
+            </el-container>
+        </el-container>
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "Main"
+    }
+</script>
+<style scoped lang="scss">
+    .el-header {
+        background-color: #B3C0D1;
+        color: #333;
+        line-height: 60px;
+    }
+    
+    .el-aside {
+        color: #333
+    }
+</style>
+```
+
+### 4.参数传递及重定向
+
+**参数传递**
+
+​		我们经常需要把某种模式匹配到的所有路由，全都映射到同个组件。例如，我们有一个 User 组件，对于所有 ID 各不相同的用户，都要使用这个组件来渲染。此时我们就需要传递参数了；
+
+1. 修改路由配置, 主要是在 path 属性中增加了 :id 这样的占位符
+
+```javascript
+{
+    path: '/user/profile/:id', 
+    name:'UserProfile', 
+    component: UserProfile
+}
+```
+
+2. 传递参数
+
+将to绑定对象，v-bind:to，即:to，注意 router-link 中的 name 属性名称 一定要和 路由中的 name 属性名称 匹配，因为这样 Vue 才能找到对应的路由路径；
+
+```vue
+<router-link :to="{name: 'UserProfile', params: {id: 1}}">个人信息</router-link>
+```
+
+3. 接收参数, 在目标组件中，一定要被标签包裹，不能直接暴露在<template></template>标签内。
+
+```vue
+{{ $route.params.id }}
+```
+
+------
+
+**使用props的方式进行参数传递**
+
+1. 修改路由配置 , 主要增加了 props: true 属性
+
+```javascript
+{
+	path: '/user/profile/:id', 
+	name:'UserProfile', 
+    component: UserProfile, 
+    props: true
+}
+```
+
+2. 传递参数和之前一样
+3. 接收参数为目标组件增加 props 属性
+
+```vue
+<template>
+  <div>
+    Profile
+    {{ id }}
+  </div>
+</template>
+
+<script>
+    export default {
+      props: ['id'],
+      name: "UserProfile"
+    }
+</script>
+
+<style scoped>
+
+</style>
+```
+
+------
+
+**组件重定向**
+
+Vue中的重定向是作用在路径不同但组件相同的情况下，比如：
+
+```javascript
+{
+    path: '/main',
+    name: 'Main',
+    component: Main
+},{
+    path: '/goHome',
+    redirect: '/main'
+}
+```
+
+​		说明：这里定义了两个路径，一个是`/main`，一个是`/goHome`，其中`/goHome`重定向到了`/main`路径，由此可见重定向不需要定义组件；
+
+​		使用的话只需要设置对应路径即可；
+
+```html
+<el-menu-item index="1-3">
+	<router-link to="/goHome">Back to Main Page</router-link>
+</el-menu-item>
+```
+
+### 5.路由模式与404
+
+------
+
+**路由**：
+
+​	路由有两种模式
+
++ `hash`：路径带`#`符号，如 http://localhost/#/lotin
++ `history`：路径不带`#`符号，如http://localhost/login
+
+修改路由配置，代码如下：
+
+```javascript
+export default new VueRouter({
+    mode: 'history',
+    routes: [
+        // Route configurations
+    ]
+});
+```
+
+**处理404**创建一个名为NotFound.vue的视图组件，代码如下：
+
+```html
+<template>
+	<div>
+        Page Not Found, Please Retry
+    </div>
+</template>
+```
+
+
+
+# #完结
+

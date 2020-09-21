@@ -507,7 +507,7 @@
 先在项目里模拟一段JSON数据，创建data.json数据内容如下
 
 ```json
-//data.json
+// data.json
 {
   "name": "Richard",
   "url": "https://google.com",
